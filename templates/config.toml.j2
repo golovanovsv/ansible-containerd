@@ -1,0 +1,22 @@
+version = 2
+
+[plugins]
+  [plugins."io.containerd.grpc.v1.cri"]
+    [plugins."io.containerd.grpc.v1.cri".containerd]
+{% if containerd_nvidia_runtime %}
+      default_runtime_name = "nvidia"
+{% endif %}
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+          SystemdCgroup = true
+{% if containerd_nvidia_runtime %}
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
+          privileged_without_host_devices = false
+          runtime_type = "io.containerd.runc.v2"
+          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
+            BinaryName = "/usr/bin/nvidia-container-runtime"
+{% endif %}
+{% if containerd_mirrors or containerd_insecure_repos %}
+    [plugins."io.containerd.grpc.v1.cri".registry]
+      config_path = "/etc/containerd/certs.d"
+{% endif%}

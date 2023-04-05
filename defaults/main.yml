@@ -1,0 +1,31 @@
+# Версия containerd. Зависит от дистрибутива
+# containerd_version: "1.6.15-1"
+
+# Адреса containerd репозитория и его ключа
+docker_repo: >
+  deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }}
+  {{ ansible_distribution_release }} stable
+docker_repo_key: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
+
+# Адреса kubernetes репозитория и его ключа
+k8s_repo: "deb https://apt.kubernetes.io/ kubernetes-xenial main"
+k8s_repo_key: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+
+# Список не безопасных docker-репозиториев
+containerd_insecure_repos: []
+
+# Настроить nvidia-runtime на хосте
+containerd_nvidia_runtime: false
+
+containerd_mirrors: {}
+# docker.io: https://nexus.company.ru/repository/docker.io
+# quay.io: https://nexus.company.ru/repository/quay.io
+
+# Параметры для работы docker через прокси
+# Если proxy_server пустая, то настройки не применяются
+# proxy_server: "http://squid.docker.com:3128"
+proxy_server: ""
+proxy_ignores:
+  - 10.0.0.0/8
+  - 172.16.0.0/12
+  - 192.168.0.0/16

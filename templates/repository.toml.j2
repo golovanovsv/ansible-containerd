@@ -1,0 +1,5 @@
+server = "https://{{ item }}"
+
+[host."{{ item }}"]
+  capabilities = ["pull", "resolve", "push"]
+  skip_verify = true

@@ -1,0 +1,11 @@
+- name: Prepare
+  hosts: all
+  tasks:
+    - name: "Install software | molecule prepare"
+      apt:
+        name: "{{ item }}"
+        state: "present"
+        update_cache: true
+      loop:
+        - "apt-transport-https"
+      when: ansible_pkg_mgr == "apt"

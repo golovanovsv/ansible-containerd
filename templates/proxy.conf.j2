@@ -1,0 +1,13 @@
+{% if proxy_server %}
+[Service]
+Environment="HTTP_PROXY={{ proxy_server }}"
+Environment="HTTPS_PROXY={{ proxy_server }}"
+{% set no_proxy = "127.0.0.1,localhost" %}
+{% if proxy_ignores is defined %}
+{% set no_proxy = no_proxy + "," + proxy_ignores|join(",") %}
+{% endif %}
+{% if containerd_insecure_repos is defined %}
+{% set no_proxy = no_proxy + "," + containerd_insecure_repos|join(",") %}
+{% endif %}
+Environment="NO_PROXY={{ no_proxy }}"
+{% endif %}

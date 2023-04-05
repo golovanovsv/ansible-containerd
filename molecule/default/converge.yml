@@ -1,0 +1,10 @@
+- name: Converge
+  hosts: all
+  tasks:
+    - name: "include containerd vars"
+      include_vars:
+        file: "vars.yml"
+
+    - name: "containerd"
+      import_role:
+        name: "containerd"

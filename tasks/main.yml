@@ -1,0 +1,10 @@
+- name: "Containerd | install nvidia runtime"
+  import_tasks: "nvidia.yml"
+  when: containerd_nvidia_runtime
+  tags:
+    - containerd
+
+- name: "Containerd | install containerd"
+  import_tasks: "containerd.yml"
+  tags:
+    - containerd

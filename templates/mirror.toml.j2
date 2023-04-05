@@ -1,0 +1,4 @@
+server = "https://{{ item.key }}"
+
+[host."{{ item.value }}"]
+  capabilities = ["pull", "resolve"]

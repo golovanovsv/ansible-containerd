@@ -1,0 +1,123 @@
+# Добавляем ключик репозитория docker
+- name: "Containerd | Add docker repository official GPG key"
+  apt_key:
+    url: "{{ docker_repo_key }}"
+    state: present
+
+# Добавляем официальный репозиторий docker (там containerd)
+- name: "Containerd | Add docker repository"
+  apt_repository:
+    repo: "{{ docker_repo }}"
+    state: present
+
+# Добавляем ключик репозитория kubernetes
+- name: "Containerd | Add kubernetes official GPG key"
+  apt_key:
+    url: "{{ k8s_repo_key }}"
+    state: "present"
+
+# Добавляем официальный репозиторий docker (там cri-tools)
+- name: "Containerd | Add kubernetes repository"
+  apt_repository:
+    repo: "{{ k8s_repo }}"
+    state: "present"
+
+- name: "Containerd | Install software"
+  apt:
+    name: "{{ item }}"
+    state: "present"
+    allow_downgrade: true
+    update_cache: true
+  loop:
+    - "{{ 'containerd.io' if containerd_version is not defined else 'containerd.io=' + containerd_version }}"
+    - cri-tools
+
+- name: "Containerd | configure cri-tools"
+  template:
+    src: "crictl.yaml.j2"
+    dest: "/etc/crictl.yaml"
+    mode: 0644
+
+- name: "Containerd | configure containerd"
+  template:
+    src: "config.toml.j2"
+    dest: "/etc/containerd/config.toml"
+    mode: 0644
+  notify: restart containerd
+
+- name: "Containerd | create certs.d"
+  file:
+    path: "/etc/containerd/certs.d"
+    state: "directory"
+    mode: "0755"
+
+# Настраиваем прокси для containerd
+- name: "Containerd | proxy"
+  block:
+    - name: "Containerd | proxy | make drop-in"
+      file:
+        path: "/etc/systemd/system/containerd.service.d"
+        state: "directory"
+        owner: "root"
+        group: "root"
+        mode: "0755"
+
+    - name: "Containerd | proxy | make proxy config"
+      template:
+        src: "proxy.conf.j2"
+        dest: "/etc/systemd/system/containerd.service.d/proxy.conf"
+        mode: "0644"
+      notify: restart containerd
+  when: proxy_server
+
+- name: "Containerd | proxy | remove proxy"
+  file:
+    path: "/etc/systemd/system/containerd.service.d/proxy.conf"
+    state: "absent"
+  notify: restart containerd
+  when: not proxy_server
+
+- name: "Containerd | start daemon"
+  systemd:
+    name: "containerd"
+    state: "started"
+
+# Настраиваем небезопасные репозитории
+- name: Containerd | insecure repositories"
+  block:
+    - name: "Containerd | insecure | create dirs"
+      file:
+        path: "/etc/containerd/certs.d/{{ item }}"
+        state: "directory"
+        mode: "0755"
+      loop: "{{ containerd_insecure_repos }}"
+
+    - name: "Containerd | insecure | craete repo"
+      template:
+        src: "repository.toml.j2"
+        dest: "/etc/containerd/certs.d/{{ item }}/hosts.toml"
+        mode: "0644"
+      loop: "{{ containerd_insecure_repos }}"
+  when: containerd_insecure_repos
+
+# Настраиваем зеркала для репозиториев
+- name: "Containerd | mirrors"
+  block:
+    - name: "Containerd | mirrors | create dirs"
+      file:
+        path: "/etc/containerd/certs.d/{{ item.key }}"
+        state: "directory"
+        mode: "0755"
+      loop: "{{ containerd_mirrors | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+
+    - name: "Containerd | mirrors | create mirror"
+      template:
+        src: "mirror.toml.j2"
+        dest: "/etc/containerd/certs.d/{{ item.key }}/hosts.toml"
+        mode: "0644"
+      loop: "{{ containerd_mirrors | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+  when: containerd_mirrors

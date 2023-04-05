@@ -1,0 +1,8 @@
+proxy_server: "http://1.1.1.1:3128"
+
+containerd_insecure_repos:
+  - "harbor.company.ru:8088"
+
+containerd_mirrors:
+  docker.io: https://nexus.company.ru/repository/docker.io
+  quay.io: https://nexus.company.ru/repository/quay.io
